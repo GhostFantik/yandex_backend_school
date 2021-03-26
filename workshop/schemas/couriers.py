@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 
 
@@ -11,6 +11,10 @@ class CourierType(Enum):
 class CourierIn(BaseModel):
     courier_id: int
     courier_type: CourierType
-    regions: list[int]
-    working_hours: list[str]
+    regions: list[int] = None
+    working_hours: list[str] = Field(..., regex=r'^\d\d:\d\d-\d\d:\d\d$')
+
+
+
+
 

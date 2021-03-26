@@ -1,5 +1,7 @@
 import uvicorn
 
 uvicorn.run(
-    'app.'
+    'workshop.app:app',
+    reload=True,
+
 )
