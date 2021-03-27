@@ -1,23 +1,27 @@
-from fastapi import APIRouter, Body, status
+from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import ValidationError, RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from workshop.schemas.couriers import CourierIn
+from sqlalchemy.orm import Session
+from workshop.db.database import get_db
+from workshop.schemas.couriers import Courier, CourierPatch
+from workshop import crud
+from workshop.utils import utils
 
 
 router = APIRouter()
 
 
 @router.post('/')
-def create_couriers(data: list[dict] = Body(..., embed=True)):
-    validated_data: list[CourierIn] = []
+def create_couriers(data: list[dict] = Body(..., embed=True), db: Session = Depends(get_db)):
+    validated_data: list[Courier] = []
     validated_data_id: list[dict[str, int]] = []
     invalidated_data_id: list[dict[str, int]] = []
     if not len(data):
         raise RequestValidationError
     for item in data:
         try:
-            courier: CourierIn = CourierIn.parse_obj(item)
+            courier: Courier = Courier.parse_obj(item)
             validated_data.append(courier)
             validated_data_id.append({'id': courier.courier_id})
         except ValidationError as e:
@@ -33,6 +37,8 @@ def create_couriers(data: list[dict] = Body(..., embed=True)):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                             content=content)
     else:
+        for i in validated_data:
+            crud.create_courier(db, i)
         content = jsonable_encoder({
             'couriers': validated_data_id
         })
@@ -40,8 +46,25 @@ def create_couriers(data: list[dict] = Body(..., embed=True)):
                             content=content)
 
 
-
 @router.patch('/{courier_id}')
-def update_courier(courier_id: int):
-    pass
+def update_courier(courier_id: int, data: dict = Body(...), db: Session = Depends(get_db),
+                   response_model=Courier):
+    try:
+        updated_data: CourierPatch = CourierPatch.parse_obj(data)
+        db_courier = crud.patch_courier(db, courier_id, updated_data)
+        courier = Courier(
+            courier_id=db_courier.courier_id,
+            courier_type=db_courier.courier_type,
+            regions=[i.region for i in db_courier.regions],
+            working_hours=[utils.datetime2str(i.begin_time, i.end_time) for i in db_courier.working_hours]
+        )
+        return courier
+    except ValidationError as e:
+        content = jsonable_encoder({
+            'validation_error': {
+                'info': e.errors()
+            }
+        })
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+                            content=content)
 
