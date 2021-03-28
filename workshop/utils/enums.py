@@ -12,3 +12,8 @@ class CourierTypeByWeight(Enum):
     bike = 15
     car = 50
 
+
+class CourierTypeByC(Enum):
+    foot = 2
+    bike = 5
+    car = 9

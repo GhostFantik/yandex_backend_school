@@ -1,2 +1,2 @@
-from .couriers import Courier, CourierPatch
-from .orders import Order
+from .couriers import Courier, CourierPatch, CourierRating
+from .orders import Order, OrderAssignIn, OrderCompleteIn

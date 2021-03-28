@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.collections import InstrumentedList
 from datetime import datetime
@@ -5,6 +6,13 @@ from workshop import models
 from workshop import schemas
 from workshop.utils import utils
 from workshop.crud import orders
+
+
+def _get_courier(db: Session, courier_id: int) -> models.Courier:
+    db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == courier_id).first()
+    if db_courier is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='courier_id does not exist!')
+    return db_courier
 
 
 def create_courier(db: Session, courier: schemas.Courier):
@@ -42,4 +50,16 @@ def patch_courier(db: Session, uid: int, data: schemas.CourierPatch) -> models.C
     return db_courier
 
 
-
+def get_rating_courier(db: Session, courier_id: int) -> models.Courier:
+    db_courier: models.Courier = _get_courier(db, courier_id)
+    if db_courier.earnings == 0:
+        rating = None
+    else:
+        average_time: list[float] = []
+        for region in db_courier.regions:
+            if region.number_completed_order != 0:
+                average_time.append(region.sum_delivery_time/region.number_completed_order)
+        t = min(average_time)
+        rating = (60*60 - min(t, 60*60))/(60*60) * 5
+    db_courier.rating = rating
+    return db_courier

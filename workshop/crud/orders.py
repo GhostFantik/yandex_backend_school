@@ -9,6 +9,22 @@ from workshop import models
 from workshop import schemas
 
 
+# do refactor!!!
+def _get_courier(db: Session, courier_id: int) -> models.Courier:
+    db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == courier_id).first()
+    if db_courier is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='courier_id does not exist!')
+    return db_courier
+
+
+def _get_order(db: Session, order_id: int) -> models.Order:
+    db_order = db.query(models.Order).filter(models.Order.order_id == order_id).first()
+    print(type(db_order))
+    if db_order is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='order_id does not exist!')
+    return db_order
+
+
 def create_order(db: Session, order: schemas.Order):
     db_order = models.Order(order_id=order.order_id,
                             weight=order.weight,
@@ -24,9 +40,7 @@ def create_order(db: Session, order: schemas.Order):
 
 
 def orders_assign(db: Session, courier_id: int) -> Optional[tuple[list[int], datetime]]:
-    db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == courier_id).first()
-    if db_courier is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='courier_id does not exist!')
+    db_courier = _get_courier(db, courier_id)
     orders = find_orders(db, db_courier)
     if not len(orders):
         if db_courier.assign_time:
@@ -35,7 +49,7 @@ def orders_assign(db: Session, courier_id: int) -> Optional[tuple[list[int], dat
             db.commit()
         return None
     if not db_courier.assign_time:
-        db_courier.assign_time = datetime.now()
+        db_courier.assign_time = datetime.utcnow()
     db_courier.orders.extend(orders)
     db.add(db_courier)
     db.commit()
@@ -81,3 +95,39 @@ def remove_order_patch_update(db: Session, db_courier: models.Courier) -> models
     db.commit()
     db.refresh(db_courier)
     return db_courier
+
+
+def complete_order(db: Session, data: schemas.OrderCompleteIn) -> models.Order:
+    db_courier = _get_courier(db, data.courier_id)
+    db_order = _get_order(db, data.order_id)
+    if db_order.courier_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This order does not have some courier')
+    if db_order.courier_id != db_courier.courier_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This courier does not own this order')
+    if not db_order.completed:
+        db_order.completed = True
+        db_order.completed_time = data.complete_time
+        if db_courier.previous_time:
+            delivery_time = db_order.completed_time.timestamp() - db_courier.previous_time.timestamp()
+            db_courier.previous_time = db_order.completed_time
+        else:
+            print(db_order.completed_time.timestamp())
+            print(db_order.completed_time.timetz())
+            print(db_courier.assign_time.timestamp())
+            print(db_courier.assign_time.timetz())
+            delivery_time = db_order.completed_time.timestamp() - db_courier.assign_time.timestamp()
+            db_courier.previous_time = db_order.completed_time
+        print(delivery_time)
+        region: models.CourierRegion = list(filter(lambda x: x.region == db_order.region, db_courier.regions))[0]
+        region.sum_delivery_time += delivery_time
+        region.number_completed_order += 1
+        db_courier.earnings += 500 * enums.CourierTypeByC[db_courier.courier_type.value].value
+        db.add(region)
+        db.add(db_courier)
+        db.add(db_order)
+        db.commit()
+        db.refresh(db_order)
+    return db_order
+
+
+

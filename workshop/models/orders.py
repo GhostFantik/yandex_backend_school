@@ -9,13 +9,12 @@ class Order(Base):
     weight = Column(Float, index=True)
     region = Column(Integer, index=True)
     completed = Column(Boolean, default=False)
+    completed_time = Column(DateTime, default=None)
     courier_id = Column(Integer, ForeignKey('couriers.courier_id'), index=True)
 
     delivery_hours = relationship('OrderDeliveryHour', back_populates='order')
     courier = relationship('Courier', back_populates='orders')
 
-    def __str__(self):
-        return self.order_id
 
 
 class OrderDeliveryHour(Base):

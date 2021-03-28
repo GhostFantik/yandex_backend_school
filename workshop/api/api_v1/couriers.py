@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from workshop.db.database import get_db
-from workshop.schemas.couriers import Courier, CourierPatch
+from workshop.schemas.couriers import Courier, CourierPatch, CourierRating
 from workshop import crud
 from workshop.utils import utils
 
@@ -46,9 +46,8 @@ def create_couriers(data: list[dict] = Body(..., embed=True), db: Session = Depe
                             content=content)
 
 
-@router.patch('/{courier_id}')
-def update_courier(courier_id: int, data: dict = Body(...), db: Session = Depends(get_db),
-                   response_model=Courier):
+@router.patch('/{courier_id}', response_model=Courier)
+def update_courier(courier_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
     try:
         updated_data: CourierPatch = CourierPatch.parse_obj(data)
         db_courier = crud.patch_courier(db, courier_id, updated_data)
@@ -68,3 +67,16 @@ def update_courier(courier_id: int, data: dict = Body(...), db: Session = Depend
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                             content=content)
 
+
+@router.get('/{courier_id}', response_model=CourierRating)
+def get_courier(courier_id: int, db:Session = Depends(get_db)):
+    db_courier = crud.get_rating_courier(db, courier_id)
+    courier = CourierRating(
+        courier_id=db_courier.courier_id,
+        courier_type=db_courier.courier_type,
+        regions=[i.region for i in db_courier.regions],
+        working_hours=[utils.datetime2str(i.begin_time, i.end_time) for i in db_courier.working_hours],
+        rating=db_courier.rating,
+        earnings=db_courier.earnings
+    )
+    return courier

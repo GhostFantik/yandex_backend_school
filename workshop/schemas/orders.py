@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, Extra
+from datetime import datetime
 
 
 class Order(BaseModel):
@@ -13,6 +14,15 @@ class Order(BaseModel):
 
 class OrderAssignIn(BaseModel):
     courier_id: int
+
+    class Config:
+        extra = Extra.forbid
+
+
+class OrderCompleteIn(BaseModel):
+    courier_id: int
+    order_id: int
+    complete_time: datetime
 
     class Config:
         extra = Extra.forbid

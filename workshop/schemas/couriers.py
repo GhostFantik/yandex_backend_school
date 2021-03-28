@@ -23,3 +23,7 @@ class CourierPatch(BaseModel):
     class Config:
         extra = Extra.forbid
 
+
+class CourierRating(Courier):
+    rating: Optional[float]
+    earnings: int
