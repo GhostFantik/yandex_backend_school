@@ -5,3 +5,4 @@ RUN mkdir -p /code/
 WORKDIR /code
 COPY requirements.txt /code/
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get install -y postgresql-client
