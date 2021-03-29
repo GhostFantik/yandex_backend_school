@@ -30,8 +30,10 @@ def orders_assign(db: Session = Depends(get_db), data: dict = Body(...)):
         return []
     order_ids: list[int] = resp[0]
     assign_time: datetime = resp[1]
+    orders = [{'id': i} for i in order_ids]
+    orders.sort(key=lambda x: x['id'])
     content = jsonable_encoder({
-        'orders': [{'id': i} for i in order_ids],
+        'orders': orders,
         'assign_time': assign_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     })
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
@@ -53,7 +55,7 @@ def complete_order(db: Session = Depends(get_db), data: dict = Body(...)):
                             content=content)
 
 
-@router.post('/')
+@router.post('')
 def create_orders(data: list[dict] = Body(..., embed=True), db: Session = Depends(get_db)):
     validated_data: list[Order] = []
     validated_data_id: list[dict[str, int]] = []

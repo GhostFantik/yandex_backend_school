@@ -3,7 +3,7 @@ from workshop.settings import settings
 import pytest
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def temp_db():
     create_database(settings.test_db_connect)
 

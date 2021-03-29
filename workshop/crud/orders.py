@@ -68,23 +68,31 @@ def find_orders(db: Session, db_courier: models.Courier) -> list[models.Order]:
         .filter(models.Order.completed.is_(False)) \
         .filter(or_(models.Order.courier_id.is_(None), models.Order.courier_id == db_courier.courier_id)) \
         .filter(models.Order.region.in_(regions)).all()
+    print(order_region)
     order_region_hour: list[models.Order] = []
     for order in order_region:
         flag = False
+        # print('oID: ', order.order_id)
         for order_hour in order.delivery_hours:
             for courier_hour in db_courier.working_hours:
+                # print('obt: ', order_hour.begin_time)
+                # print('oet: ', order_hour.end_time)
+                # print('cbt: ', courier_hour.begin_time)
+                # print('cet: ', courier_hour.end_time)
                 if order_hour.begin_time <= courier_hour.begin_time <= order_hour.end_time:
                     flag = True
                 elif courier_hour.begin_time <= order_hour.begin_time <= courier_hour.end_time:
                     flag = True
         if flag:
             order_region_hour.append(order)
+        # print(order.order_id, flag)
     order_region_hour_weight: list[models.Order] = list(filter(
         lambda x: x.weight <= max_weight, order_region_hour))
     order_region_hour_weight.sort(key=lambda x: x.weight)
     ready_orders: list[models.Order] = []
     courier_weight = 0
     for order in order_region_hour_weight:
+        print(order.order_id)
         courier_weight += order.weight
         if courier_weight <= max_weight:
             ready_orders.append(order)
@@ -110,18 +118,26 @@ def complete_order(db: Session, data: schemas.OrderCompleteIn) -> models.Order:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This courier does not own this order')
     if not db_order.completed:
         db_order.completed = True
-        db_order.completed_time = data.complete_time
+        db_order.completed_time = datetime(year=data.complete_time.year,
+                                           month=data.complete_time.month,
+                                           day=data.complete_time.day,
+                                           hour=data.complete_time.hour,
+                                           minute=data.complete_time.minute,
+                                           second=data.complete_time.second,
+                                           microsecond=data.complete_time.microsecond)
         if db_courier.previous_time:
             delivery_time = db_order.completed_time.timestamp() - db_courier.previous_time.timestamp()
             db_courier.previous_time = db_order.completed_time
         else:
+            # print(db_order.completed_time.tzinfo)
             # print(db_order.completed_time.timestamp())
             # print(db_order.completed_time)
+            # print(db_courier.assign_time.tzinfo)
             # print(db_courier.assign_time.timestamp())
             # print(db_courier.assign_time)
             delivery_time = db_order.completed_time.timestamp() - db_courier.assign_time.timestamp()
             db_courier.previous_time = db_order.completed_time
-        # print(delivery_time)
+        print(delivery_time)
         region: models.CourierRegion = list(filter(lambda x: x.region == db_order.region, db_courier.regions))[0]
         region.sum_delivery_time += delivery_time
         region.number_completed_order += 1
@@ -131,6 +147,13 @@ def complete_order(db: Session, data: schemas.OrderCompleteIn) -> models.Order:
         db.add(db_order)
         db.commit()
         db.refresh(db_order)
+    # print(db_order.completed_time.tzinfo)
+    # print(db_order.completed_time.timestamp())
+    # print(db_order.completed_time)
+    # print(db_courier.assign_time.timestamp())
+    # print(db_courier.assign_time)
+    # print(db_courier.assign_time.tzinfo)
+    # print(db_order.completed_time.timestamp()-db_courier.assign_time.timestamp())
     return db_order
 
 

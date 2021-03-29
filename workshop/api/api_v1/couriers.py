@@ -12,7 +12,7 @@ from workshop.utils import utils
 router = APIRouter()
 
 
-@router.post('/')
+@router.post('')
 def create_couriers(data: list[dict] = Body(..., embed=True), db: Session = Depends(get_db)):
     validated_data: list[Courier] = []
     validated_data_id: list[dict[str, int]] = []

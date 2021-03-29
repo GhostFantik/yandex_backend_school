@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Field, Extra, validator
 from datetime import datetime
 
 
@@ -26,3 +26,4 @@ class OrderCompleteIn(BaseModel):
 
     class Config:
         extra = Extra.forbid
+
