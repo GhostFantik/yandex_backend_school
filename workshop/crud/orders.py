@@ -26,6 +26,10 @@ def _get_order(db: Session, order_id: int) -> models.Order:
 
 
 def create_order(db: Session, order: schemas.Order):
+    db_order = db.query(models.Order).filter(models.Order.order_id == order.order_id).first()
+    if db_order:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'order_id = {order.order_id} already exist')
     db_order = models.Order(order_id=order.order_id,
                             weight=order.weight,
                             region=order.region)
@@ -111,13 +115,13 @@ def complete_order(db: Session, data: schemas.OrderCompleteIn) -> models.Order:
             delivery_time = db_order.completed_time.timestamp() - db_courier.previous_time.timestamp()
             db_courier.previous_time = db_order.completed_time
         else:
-            print(db_order.completed_time.timestamp())
-            print(db_order.completed_time.timetz())
-            print(db_courier.assign_time.timestamp())
-            print(db_courier.assign_time.timetz())
+            # print(db_order.completed_time.timestamp())
+            # print(db_order.completed_time)
+            # print(db_courier.assign_time.timestamp())
+            # print(db_courier.assign_time)
             delivery_time = db_order.completed_time.timestamp() - db_courier.assign_time.timestamp()
             db_courier.previous_time = db_order.completed_time
-        print(delivery_time)
+        # print(delivery_time)
         region: models.CourierRegion = list(filter(lambda x: x.region == db_order.region, db_courier.regions))[0]
         region.sum_delivery_time += delivery_time
         region.number_completed_order += 1

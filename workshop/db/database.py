@@ -3,8 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from ..settings import settings
 
-SQLALCHEMY_DATABASE_URL = settings.db_connect
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
+if settings.TESTING:
+    SQLALCHEMY_DATABASE_URL = settings.test_db_connect
+else:
+    SQLALCHEMY_DATABASE_URL = settings.db_connect
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}  # only for sqlite

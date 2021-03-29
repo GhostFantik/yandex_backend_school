@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, Extra
+from fastapi import Depends
+from pydantic import BaseModel, Field, Extra, validator
 from typing import Optional
 from workshop.utils import enums
 

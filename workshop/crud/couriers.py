@@ -16,6 +16,12 @@ def _get_courier(db: Session, courier_id: int) -> models.Courier:
 
 
 def create_courier(db: Session, courier: schemas.Courier):
+    db_courier: models.Courier = db.query(models.Courier)\
+        .filter(models.Courier.courier_id == courier.courier_id)\
+        .first()
+    if db_courier:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'courier_id = {courier.courier_id} already exist')
     db_courier = models.Courier(courier_id=courier.courier_id,
                                 courier_type=courier.courier_type)
     db.add(db_courier)
