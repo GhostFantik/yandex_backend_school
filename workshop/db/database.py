@@ -4,16 +4,24 @@ from sqlalchemy.orm import sessionmaker
 
 from ..settings import settings
 
-if settings.TESTING:
-    SQLALCHEMY_DATABASE_URL = settings.test_db_connect
+if settings.PRODUCTION:
+    if settings.TESTING:
+        SQLALCHEMY_DATABASE_URL = settings.production_test_db_connect
+    else:
+        SQLALCHEMY_DATABASE_URL = settings.production_db_connect
+
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
 else:
-    SQLALCHEMY_DATABASE_URL = settings.db_connect
+    if settings.TESTING:
+        SQLALCHEMY_DATABASE_URL = settings.test_db_connect
+    else:
+        SQLALCHEMY_DATABASE_URL = settings.db_connect
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}  # only for sqlite
-)
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}  # only for sqlite
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base(bind=engine)
 
 
