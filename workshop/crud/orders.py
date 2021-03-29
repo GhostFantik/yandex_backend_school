@@ -4,20 +4,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import Optional
 from datetime import datetime
+
 from workshop.utils import enums
 from workshop import models
 from workshop import schemas
+from workshop import crud
+from workshop.utils import utils
 
 
-# do refactor!!!
-def _get_courier(db: Session, courier_id: int) -> models.Courier:
-    db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == courier_id).first()
-    if db_courier is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='courier_id does not exist!')
-    return db_courier
-
-
-def _get_order(db: Session, order_id: int) -> models.Order:
+def get_order(db: Session, order_id: int) -> models.Order:
     db_order = db.query(models.Order).filter(models.Order.order_id == order_id).first()
     print(type(db_order))
     if db_order is None:
@@ -35,16 +30,17 @@ def create_order(db: Session, order: schemas.Order):
                             region=order.region)
     db.add(db_order)
     for i in order.delivery_hours:
-        (begin_time, end_time) = i.split('-')
-        begin_time = datetime.strptime(begin_time, '%H:%M')
-        end_time = datetime.strptime(end_time, '%H:%M')
-        db_hours = models.OrderDeliveryHour(begin_time=begin_time, end_time=end_time, order_id=order.order_id)
+        # (begin_time, end_time) = i.split('-')
+        # begin_time = datetime.strptime(begin_time, '%H:%M')
+        # end_time = datetime.strptime(end_time, '%H:%M')
+        # db_hours = models.OrderDeliveryHour(begin_time=begin_time, end_time=end_time, order_id=order.order_id)
+        db_hours = models.OrderDeliveryHour(**utils.str2datetime(i), order_id=order.order_id)
         db.add(db_hours)
     db.commit()
 
 
 def orders_assign(db: Session, courier_id: int) -> Optional[tuple[list[int], datetime]]:
-    db_courier = _get_courier(db, courier_id)
+    db_courier = crud.get_courier(db, courier_id)
     orders = find_orders(db, db_courier)
     if not len(orders):
         if db_courier.assign_time:
@@ -68,7 +64,7 @@ def find_orders(db: Session, db_courier: models.Courier) -> list[models.Order]:
         .filter(models.Order.completed.is_(False)) \
         .filter(or_(models.Order.courier_id.is_(None), models.Order.courier_id == db_courier.courier_id)) \
         .filter(models.Order.region.in_(regions)).all()
-    print(order_region)
+    # print(order_region)
     order_region_hour: list[models.Order] = []
     for order in order_region:
         flag = False
@@ -110,8 +106,8 @@ def remove_order_patch_update(db: Session, db_courier: models.Courier) -> models
 
 
 def complete_order(db: Session, data: schemas.OrderCompleteIn) -> models.Order:
-    db_courier = _get_courier(db, data.courier_id)
-    db_order = _get_order(db, data.order_id)
+    db_courier = crud.get_courier(db, data.courier_id)
+    db_order = get_order(db, data.order_id)
     if db_order.courier_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This order does not have some courier')
     if db_order.courier_id != db_courier.courier_id:

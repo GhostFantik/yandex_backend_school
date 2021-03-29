@@ -1,4 +1,3 @@
-from workshop.models import couriers
 import datetime
 
 

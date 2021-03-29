@@ -1,14 +1,13 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.collections import InstrumentedList
-from datetime import datetime
+
 from workshop import models
 from workshop import schemas
 from workshop.utils import utils
 from workshop.crud import orders
 
 
-def _get_courier(db: Session, courier_id: int) -> models.Courier:
+def get_courier(db: Session, courier_id: int) -> models.Courier:
     db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == courier_id).first()
     if db_courier is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='courier_id does not exist!')
@@ -29,16 +28,17 @@ def create_courier(db: Session, courier: schemas.Courier):
         db_region = models.CourierRegion(region=i, courier_id=courier.courier_id)
         db.add(db_region)
     for i in courier.working_hours:
-        (begin_time, end_time) = i.split('-')
-        begin_time = datetime.strptime(begin_time, '%H:%M')
-        end_time = datetime.strptime(end_time, '%H:%M')
-        db_hours = models.CourierWorkHour(begin_time=begin_time, end_time=end_time, courier_id=courier.courier_id)
+        # (begin_time, end_time) = i.split('-')
+        # begin_time = datetime.strptime(begin_time, '%H:%M')
+        # end_time = datetime.strptime(end_time, '%H:%M')
+        # db_hours = models.CourierWorkHour(begin_time=begin_time, end_time=end_time, courier_id=courier.courier_id)
+        db_hours = models.CourierWorkHour(**utils.str2datetime(i), courier_id=courier.courier_id)
         db.add(db_hours)
     db.commit()
 
 
 def patch_courier(db: Session, uid: int, data: schemas.CourierPatch) -> models.Courier:
-    db_courier: models.Courier = db.query(models.Courier).filter(models.Courier.courier_id == uid).first()
+    db_courier: models.Courier = get_courier(db, uid)
     db_courier = orders.remove_order_patch_update(db, db_courier)
     for field, value in data.dict(exclude_none=True).items():
         if field == 'regions':
@@ -57,7 +57,7 @@ def patch_courier(db: Session, uid: int, data: schemas.CourierPatch) -> models.C
 
 
 def get_rating_courier(db: Session, courier_id: int) -> models.Courier:
-    db_courier: models.Courier = _get_courier(db, courier_id)
+    db_courier: models.Courier = get_courier(db, courier_id)
     if db_courier.earnings == 0:
         rating = None
     else:

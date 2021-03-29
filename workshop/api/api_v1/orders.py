@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from sqlalchemy.orm import Session
+
 from workshop.db.database import get_db
 from workshop.schemas import Order, OrderAssignIn, OrderCompleteIn
 from workshop import crud
@@ -87,5 +88,3 @@ def create_orders(data: list[dict] = Body(..., embed=True), db: Session = Depend
         })
         return JSONResponse(status_code=status.HTTP_201_CREATED,
                             content=content)
-
-

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Float, Enum, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+
 from workshop.db.database import Base
 
 
@@ -14,7 +15,6 @@ class Order(Base):
 
     delivery_hours = relationship('OrderDeliveryHour', back_populates='order')
     courier = relationship('Courier', back_populates='orders')
-
 
 
 class OrderDeliveryHour(Base):

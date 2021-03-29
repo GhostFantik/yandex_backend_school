@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import Response
+
 from workshop.db.database import create_db
 from workshop.api.api_v1.api import api_router
 

@@ -1,6 +1,7 @@
 from sqlalchemy_utils import create_database, drop_database
-from workshop.settings import settings
 import pytest
+
+from workshop.settings import settings
 
 
 @pytest.fixture(scope='session')

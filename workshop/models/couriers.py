@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, Float, Enum, ForeignKey, DateTime, TIMESTAMP
+from sqlalchemy import Column, Integer, Float, Enum, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+
 from workshop.db.database import Base
 from workshop.utils import enums
 
@@ -11,6 +12,7 @@ class Courier(Base):
     earnings = Column(Integer, default=0)
     assign_time = Column(DateTime, nullable=True, default=None)
     previous_time = Column(DateTime, nullable=True, default=None)
+    rating = None
 
     regions = relationship('CourierRegion', back_populates='courier', cascade='all,delete')
     working_hours = relationship('CourierWorkHour', back_populates='courier')

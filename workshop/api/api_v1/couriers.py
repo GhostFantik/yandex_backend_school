@@ -3,6 +3,7 @@ from fastapi.exceptions import ValidationError, RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
+
 from workshop.db.database import get_db
 from workshop.schemas.couriers import Courier, CourierPatch, CourierRating
 from workshop import crud
