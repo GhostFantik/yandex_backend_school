@@ -7,5 +7,5 @@ services:
     ports:
     - 8000:8000
     volumes:
-    - ./:/code/
+    - /home/entrant/project/:/code/
     command: ./start.sh

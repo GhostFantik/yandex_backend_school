@@ -1,2 +1,2 @@
 #!/bin/bash
-python -m ./workshop
+python -m workshop
