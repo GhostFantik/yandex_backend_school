@@ -18,8 +18,8 @@
 3. При необходимости отредактировать ***docker-compose*** файл
 4. При необходимости отредактировать ***.ENV*** файл
 5. Добавить в ***.ENV*** переменную ***PRODUCTION='True'*** для поддержки ***PostgreSQL*** Если переменная не указана, то используется SQLite
-6. Выполнить ***sudo docker-compose up***
-Для запуска в фоне выполнить ***sudo docker-compose up -d***
+6. Выполнить ***sudo docker-compose up*** <br/>
+Для запуска в фоне выполнить ***sudo docker-compose up -d*** <br/>
 Для остановки выполнить ***sudo docker-compose down***
 ---
 ### Тесты
