@@ -6,9 +6,14 @@ from workshop.settings import settings
 
 @pytest.fixture(scope='session')
 def temp_db():
-    create_database(settings.test_db_connect)
+    if settings.PRODUCTION:
+        db_url = settings.production_test_db_connect
+    else:
+        db_url = settings.test_db_connect
+
+    create_database(db_url)
 
     try:
         yield
     finally:
-        drop_database(settings.test_db_connect)
+        drop_database(db_url)
