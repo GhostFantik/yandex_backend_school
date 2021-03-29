@@ -3,6 +3,7 @@ version: "3"
 services:
   db:
     image: postgres
+    restart: always
     volumes:
     - /home/entrant/project/data/db:/var/lib/postgresql/data
     environment:
@@ -11,6 +12,7 @@ services:
       - POSTGRES_PASSWORD=123456
   db-test:
     image: postgres
+    restart: always
     environment:
       - POSTGRES_DB=test
       - POSTGRES_USER=postgres
