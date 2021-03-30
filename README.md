@@ -5,6 +5,7 @@
 - ***test_db_connect*** - строка подключения базы данных SQLite для тестирования. Автоматически удаляется после завершения тестирования. (sqlite:///./sql_test.db)
 - ***production_db_connect*** - PRODUCTION Postgres база данных (postgresql://postgres:123456@db/prod')
 - ***production_test_db_connect*** - PRODUCTION TESTING Postgres база данных. Удаляется после завершения работы приложения. (postgresql://postgres:123456@db-test/test)
+- ***workers*** - Количество процессов, выделяемых для uvicornа. Рассчитывается по формуле: ***2*количество ядер CPU + 1***
 - ***PRODUCTION*** - установить любое значение, если запускается в продакшн моде. Postgres support
 ---
 >.***test.env*** файл - служебный. Редактировать не нужно!
